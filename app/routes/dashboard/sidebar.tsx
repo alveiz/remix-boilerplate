@@ -22,6 +22,18 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="space-y-1">
+            <NavigationLink to="dialers">
+              <Layers2 className="mr-2 h-4 w-4" />
+              Dialers
+            </NavigationLink>
+            <NavigationLink to="setters">
+              <Globe className="mr-2 h-4 w-4" />
+              Setters
+            </NavigationLink>
+            <NavigationLink to="closers">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Closers
+            </NavigationLink>
             <NavigationLink to="/dashboard">
               <Layers2 className="mr-2 h-4 w-4" />
               Dashboard

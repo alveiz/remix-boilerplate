@@ -44,6 +44,109 @@ model VerificationCode {
   user    User   @relation(fields: [userId], references: [id])
 }
 
+// Base user models
+model Dialer {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  firstName  String
+  lastName   String
+  password   String?
+  metrics    DialerMetrics[] @relation("DialerToMetrics")
+  emailVerified      Boolean              @default(false)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model Setter {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  firstName  String
+  lastName   String
+  password   String?
+  metrics    SetterMetrics[] @relation("SetterToMetrics")
+  emailVerified      Boolean              @default(false)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model Closer {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  firstName  String
+  lastName   String
+  password   String?
+  metrics    CloserMetrics[] @relation("CloserToMetrics")
+  emailVerified      Boolean              @default(false)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+// Daily metrics models
+model DialerMetrics {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  dialerId           String    @db.ObjectId
+  dialer             Dialer    @relation("DialerToMetrics", fields: [dialerId], references: [id])
+  date               DateTime
+  dials         Int       @default(0)
+  connects           Int       @default(0)
+  conversations      Int       @default(0)
+  qualifiedConversations Int   @default(0)
+  meetingsScheduled  Int       @default(0)
+  meetingsSet        Int       @default(0)
+  meetingsShowed     Int       @default(0)
+  noShows            Int       @default(0)
+  closedDeals        Int       @default(0)
+  revenueGenerated   Float     @default(0.0)
+  cashCollected      Float     @default(0.0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  @@unique([dialerId, date]) // Ensures one record per dialer per date
+}
+
+model SetterMetrics {
+  id                        String    @id @default(auto()) @map("_id") @db.ObjectId
+  setterId                 String    @db.ObjectId
+  setter                   Setter    @relation("SetterToMetrics", fields: [setterId], references: [id])
+  date                     DateTime
+  dailyOutboundConversations Int     @default(0)
+  inboundConversations     Int       @default(0)
+  followUps                Int       @default(0)
+  callsProposed            Int       @default(0)
+  totalHighTicketSalesCallsBooked Int @default(0)
+  setsScheduled            Int       @default(0)
+  setsTaken                Int       @default(0)
+  closedSets               Int       @default(0)
+  revenueGenerated         Float     @default(0.0)
+  newCashCollected         Float     @default(0.0)
+  recurringCashCollected   Float     @default(0.0)
+  downsellRevenue          Float     @default(0.0)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  
+  @@unique([setterId, date]) // Ensures one record per setter per date
+}
+
+model CloserMetrics {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  closerId        String    @db.ObjectId
+  closer          Closer    @relation("CloserToMetrics", fields: [closerId], references: [id])
+  date            DateTime
+  dailyCallsBooked Int      @default(0)
+  shows           Int       @default(0)
+  noShows         Int       @default(0)
+  cancelled       Int       @default(0)
+  disqualified    Int       @default(0)
+  rescheduled     Int       @default(0)
+  offersMade      Int       @default(0)
+  callsTaken      Int       @default(0)
+  closes          Int       @default(0)
+  cashCollected   Float     @default(0.0)
+  revenueGenerated Float    @default(0.0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([closerId, date]) // Ensures one record per closer per date
+}
+
+
 // Prisma schema for stripe plan, price, subscription
 
 model Plan {
