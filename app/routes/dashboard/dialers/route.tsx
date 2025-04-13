@@ -90,14 +90,18 @@ export const action: ActionFunction = async ({ request }) => {
   } else if (metrics.qualifiedConversations > metrics.conversations) {
     errors.qualifiedConversations =
       "Qualified Conversations cannot exceed Conversations"
-  } else if (metrics.meetingsScheduled < 0) {
-    errors.meetingsScheduled = "Meetings Scheduled cannot be negative"
+  } else if (metrics.meetingsSet > metrics.qualifiedConversations) {
+    errors.meetingsSet = "Meetings Set cannot exceed Qualified Conversations"
+  } else if (
+    metrics.meetingsScheduled !=
+    metrics.meetingsShowed + metrics.noShows
+  ) {
+    errors.meetingsScheduled =
+      "Meetings Set must equal Meetings Showed + No Shows"
   } else if (metrics.meetingsShowed > metrics.meetingsSet) {
     errors.meetingsShowed = "Meetings Showed cannot exceed Meetings Set"
   } else if (metrics.noShows > metrics.meetingsSet) {
     errors.noShows = "No Shows cannot exceed Meetings Set"
-  } else if (metrics.meetingsSet != metrics.meetingsShowed + metrics.noShows) {
-    errors.meetingsSet = "Meetings Set must equal Meetings Showed + No Shows"
   } else if (metrics.closedDeals > metrics.meetingsShowed) {
     errors.closedDeals = "Closed Deals cannot exceed Meetings Showed"
   } else if (metrics.revenueGenerated < 0 && metrics.closedDeals > 0) {
@@ -176,21 +180,26 @@ const fieldInfo = {
   },
   meetingsScheduled: {
     description: "Enter the total number of meetings scheduled today.",
-    include: "All meetings booked for any date.",
-    why: "Tracks pipeline generation.",
-    exclude: "Meetings not confirmed.",
-    important: "Reflects conversion from conversations.",
+    include:
+      "Only meetings booked today from your sets with a scheduled occurrence date of today.",
+    why: "Tracks same-day scheduling and helps evaluate immediate follow-through.",
+    exclude:
+      "Meetings scheduled today for future dates or tentative/unconfirmed meetings.",
+    important:
+      "Can exceed Meetings Set (General) due to rolling-day meetings set earlier.",
   },
   meetingsSet: {
     description: "Enter the total number of meetings confirmed for today.",
-    include: "Meetings scheduled and set for today.",
-    why: "Tracks today’s booked opportunities.",
-    exclude: "Future or unconfirmed meetings.",
-    important: "Must equal Meetings Showed + No Shows.",
+    include:
+      "All meetings booked today from your sets, even if scheduled to occur on future dates.",
+    why: "Tracks total scheduling activity for the report date.",
+    exclude: "Tentative or unconfirmed meetings.",
+    important: "Cannot exceed the number of Qualified Conversations.",
   },
   meetingsShowed: {
-    description: "Enter the total number of meetings that occurred.",
-    include: "Meetings where prospects attended.",
+    description: "Enter the total number of meetings that occurred today.",
+    include:
+      "Meetings tied to your sets that occurred today, even if they were scheduled on earlier days.",
     why: "Measures attendance rate.",
     exclude: "No-shows or cancellations.",
     important: "Must not exceed Meetings Set.",
