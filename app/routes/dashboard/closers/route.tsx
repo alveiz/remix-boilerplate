@@ -41,49 +41,48 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-type SetterMetrics = {
-  setterId: string
-  setter: { firstName: string; lastName: string }
-  dailyOutboundConversations: number
-  inboundConversations: number
-  followUps: number
-  callsProposed: number
-  totalHighTicketSalesCallsBooked: number
-  setsScheduled: number
-  setsTaken: number
-  closedSets: number
+type CloserMetrics = {
+  closerId: string
+  closer: { firstName: string; lastName: string }
+  dailyCallsBooked: number
+  shows: number
+  noShows: number
+  cancelled: number
+  disqualified: number
+  rescheduled: number
+  offersMade: number
+  callsTaken: number
+  closes: number
+  cashCollected: number
   revenueGenerated: number
-  newCashCollected: number
-  recurringCashCollected: number
-  downsellRevenue: number
   date: string
 }
 
 type LoaderData = {
-  settersMetrics: SetterMetrics[]
+  closersMetrics: CloserMetrics[]
   totals: {
-    dailyOutboundConversations: number
-    inboundConversations: number
-    followUps: number
-    callsProposed: number
-    totalHighTicketSalesCallsBooked: number
-    setsScheduled: number
-    setsTaken: number
-    closedSets: number
+    dailyCallsBooked: number
+    shows: number
+    noShows: number
+    cancelled: number
+    disqualified: number
+    rescheduled: number
+    offersMade: number
+    callsTaken: number
+    closes: number
+    cashCollected: number
     revenueGenerated: number
-    newCashCollected: number
-    recurringCashCollected: number
-    downsellRevenue: number
   }
   previousTotals: {
-    dailyOutboundConversations: number
-    inboundConversations: number
-    followUps: number
-    callsProposed: number
-    totalHighTicketSalesCallsBooked: number
-    setsScheduled: number
-    setsTaken: number
-    closedSets: number
+    dailyCallsBooked: number
+    shows: number
+    noShows: number
+    cancelled: number
+    disqualified: number
+    rescheduled: number
+    offersMade: number
+    callsTaken: number
+    closes: number
   }
   daysInRange: number
   daysInPreviousRange: number
@@ -95,7 +94,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const range = url.searchParams.get("range") || "30d"
   const startDate = url.searchParams.get("startDate")
   const endDate = url.searchParams.get("endDate")
-  const setterId = url.searchParams.get("setterId")
+  const closerId = url.searchParams.get("closerId")
   const userTimeZone = url.searchParams.get("tz") || "UTC"
 
   let start: Date
@@ -162,105 +161,96 @@ export const loader: LoaderFunction = async ({ request }) => {
     daysInPreviousRange = 30
   }
 
-  const settersMetricsRaw = await prisma.setterMetrics.findMany({
+  const closersMetricsRaw = await prisma.closerMetrics.findMany({
     where: {
       date: {
         gte: start,
         lte: end,
       },
-      ...(setterId && { setterId }),
+      ...(closerId && { closerId }),
     },
     include: {
-      setter: {
+      closer: {
         select: {
           firstName: true,
           lastName: true,
         },
       },
     },
-    orderBy: [{ setterId: "asc" }, { date: "desc" }],
+    orderBy: [{ closerId: "asc" }, { date: "desc" }],
   })
 
-  const previousMetricsRaw = await prisma.setterMetrics.findMany({
+  const previousMetricsRaw = await prisma.closerMetrics.findMany({
     where: {
       date: {
         gte: previousStart,
         lte: previousEnd,
       },
-      ...(setterId && { setterId }),
+      ...(closerId && { closerId }),
     },
   })
 
-  const settersMetrics = settersMetricsRaw.map((metric) => ({
+  const closersMetrics = closersMetricsRaw.map((metric) => ({
     ...metric,
     date: metric.date.toISOString(),
   }))
 
-  const totals = settersMetrics.reduce(
+  const totals = closersMetrics.reduce(
     (acc, metric) => ({
-      dailyOutboundConversations:
-        acc.dailyOutboundConversations + metric.dailyOutboundConversations,
-      inboundConversations:
-        acc.inboundConversations + metric.inboundConversations,
-      followUps: acc.followUps + metric.followUps,
-      callsProposed: acc.callsProposed + metric.callsProposed,
-      totalHighTicketSalesCallsBooked:
-        acc.totalHighTicketSalesCallsBooked +
-        metric.totalHighTicketSalesCallsBooked,
-      setsScheduled: acc.setsScheduled + metric.setsScheduled,
-      setsTaken: acc.setsTaken + metric.setsTaken,
-      closedSets: acc.closedSets + metric.closedSets,
+      dailyCallsBooked: acc.dailyCallsBooked + metric.dailyCallsBooked,
+      shows: acc.shows + metric.shows,
+      noShows: acc.noShows + metric.noShows,
+      cancelled: acc.cancelled + metric.cancelled,
+      disqualified: acc.disqualified + metric.disqualified,
+      rescheduled: acc.rescheduled + metric.rescheduled,
+      offersMade: acc.offersMade + metric.offersMade,
+      callsTaken: acc.callsTaken + metric.callsTaken,
+      closes: acc.closes + metric.closes,
+      cashCollected: acc.cashCollected + metric.cashCollected,
       revenueGenerated: acc.revenueGenerated + metric.revenueGenerated,
-      newCashCollected: acc.newCashCollected + metric.newCashCollected,
-      recurringCashCollected:
-        acc.recurringCashCollected + metric.recurringCashCollected,
-      downsellRevenue: acc.downsellRevenue + metric.downsellRevenue,
     }),
     {
-      dailyOutboundConversations: 0,
-      inboundConversations: 0,
-      followUps: 0,
-      callsProposed: 0,
-      totalHighTicketSalesCallsBooked: 0,
-      setsScheduled: 0,
-      setsTaken: 0,
-      closedSets: 0,
+      dailyCallsBooked: 0,
+      shows: 0,
+      noShows: 0,
+      cancelled: 0,
+      disqualified: 0,
+      rescheduled: 0,
+      offersMade: 0,
+      callsTaken: 0,
+      closes: 0,
+      cashCollected: 0,
       revenueGenerated: 0,
-      newCashCollected: 0,
-      recurringCashCollected: 0,
-      downsellRevenue: 0,
     }
   )
 
   const previousTotals = previousMetricsRaw.reduce(
     (acc, metric) => ({
-      dailyOutboundConversations:
-        acc.dailyOutboundConversations + metric.dailyOutboundConversations,
-      inboundConversations:
-        acc.inboundConversations + metric.inboundConversations,
-      followUps: acc.followUps + metric.followUps,
-      callsProposed: acc.callsProposed + metric.callsProposed,
-      totalHighTicketSalesCallsBooked:
-        acc.totalHighTicketSalesCallsBooked +
-        metric.totalHighTicketSalesCallsBooked,
-      setsScheduled: acc.setsScheduled + metric.setsScheduled,
-      setsTaken: acc.setsTaken + metric.setsTaken,
-      closedSets: acc.closedSets + metric.closedSets,
+      dailyCallsBooked: acc.dailyCallsBooked + metric.dailyCallsBooked,
+      shows: acc.shows + metric.shows,
+      noShows: acc.noShows + metric.noShows,
+      cancelled: acc.cancelled + metric.cancelled,
+      disqualified: acc.disqualified + metric.disqualified,
+      rescheduled: acc.rescheduled + metric.rescheduled,
+      offersMade: acc.offersMade + metric.offersMade,
+      callsTaken: acc.callsTaken + metric.callsTaken,
+      closes: acc.closes + metric.closes,
     }),
     {
-      dailyOutboundConversations: 0,
-      inboundConversations: 0,
-      followUps: 0,
-      callsProposed: 0,
-      totalHighTicketSalesCallsBooked: 0,
-      setsScheduled: 0,
-      setsTaken: 0,
-      closedSets: 0,
+      dailyCallsBooked: 0,
+      shows: 0,
+      noShows: 0,
+      cancelled: 0,
+      disqualified: 0,
+      rescheduled: 0,
+      offersMade: 0,
+      callsTaken: 0,
+      closes: 0,
     }
   )
 
   return json<LoaderData>({
-    settersMetrics,
+    closersMetrics,
     totals,
     previousTotals,
     daysInRange,
@@ -269,9 +259,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   })
 }
 
-export default function SettersAnalytics() {
+export default function ClosersAnalytics() {
   const {
-    settersMetrics,
+    closersMetrics,
     totals,
     previousTotals,
     daysInRange,
@@ -285,11 +275,11 @@ export default function SettersAnalytics() {
 
   // Pagination settings
   const rowsPerPage = 10
-  const totalRows = settersMetrics.length
+  const totalRows = closersMetrics.length
   const totalPages = Math.ceil(totalRows / rowsPerPage)
   const startIndex = (currentPage - 1) * rowsPerPage
   const endIndex = startIndex + rowsPerPage
-  const paginatedMetrics = settersMetrics.slice(startIndex, endIndex)
+  const paginatedMetrics = closersMetrics.slice(startIndex, endIndex)
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -298,24 +288,24 @@ export default function SettersAnalytics() {
     }
   }
 
-  // Get selected setter from search params
-  const selectedSetterId = searchParams.get("setterId") || ""
+  // Get selected closer from search params
+  const selectedCloserId = searchParams.get("closerId") || ""
 
-  // Get unique setters for dropdown
-  const setters = useMemo(() => {
-    const uniqueSetters = Array.from(
+  // Get unique closers for dropdown
+  const closers = useMemo(() => {
+    const uniqueClosers = Array.from(
       new Map(
-        settersMetrics.map((metric) => [
-          metric.setterId,
+        closersMetrics.map((metric) => [
+          metric.closerId,
           {
-            id: metric.setterId,
-            name: `${metric.setter.firstName} ${metric.setter.lastName}`,
+            id: metric.closerId,
+            name: `${metric.closer.firstName} ${metric.closer.lastName}`,
           },
         ])
       ).values()
     )
-    return uniqueSetters.sort((a, b) => a.name.localeCompare(b.name))
-  }, [settersMetrics])
+    return uniqueClosers.sort((a, b) => a.name.localeCompare(b.name))
+  }, [closersMetrics])
 
   useEffect(() => {
     const clientTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -331,9 +321,9 @@ export default function SettersAnalytics() {
   }, [userTimeZone, setSearchParams])
 
   useEffect(() => {
-    // Reset to page 1 when settersMetrics changes (e.g., new filter applied)
+    // Reset to page 1 when closersMetrics changes (e.g., new filter applied)
     setCurrentPage(1)
-  }, [settersMetrics])
+  }, [closersMetrics])
 
   const handleRangeChange = (range: string) => {
     setSearchParams(
@@ -365,20 +355,20 @@ export default function SettersAnalytics() {
           startDate: formattedStart,
           endDate: formattedEnd,
           tz: userTimeZone,
-          ...(selectedSetterId && { setterId: selectedSetterId }),
+          ...(selectedCloserId && { closerId: selectedCloserId }),
         },
         { replace: true }
       )
     }
   }
 
-  const handleSetterChange = (setterId: string) => {
+  const handleCloserChange = (closerId: string) => {
     setSearchParams(
       (prev) => {
-        if (setterId) {
-          prev.set("setterId", setterId)
+        if (closerId) {
+          prev.set("closerId", closerId)
         } else {
-          prev.delete("setterId")
+          prev.delete("closerId")
         }
         return prev
       },
@@ -386,135 +376,110 @@ export default function SettersAnalytics() {
     )
   }
 
-  const dailyOutboundConversationsWidth = 100
-  const inboundConversationsWidth =
-    totals.dailyOutboundConversations > 0
-      ? (totals.inboundConversations / totals.dailyOutboundConversations) * 100
+  const dailyCallsBookedWidth = 100
+  const showsWidth =
+    totals.dailyCallsBooked > 0
+      ? (totals.shows / totals.dailyCallsBooked) * 100
       : 0
-  const followUpsWidth =
-    totals.dailyOutboundConversations > 0
-      ? (totals.followUps / totals.dailyOutboundConversations) * 100
+  const offersMadeWidth =
+    totals.dailyCallsBooked > 0
+      ? (totals.offersMade / totals.dailyCallsBooked) * 100
       : 0
-  const callsProposedWidth =
-    totals.dailyOutboundConversations > 0
-      ? (totals.callsProposed / totals.dailyOutboundConversations) * 100
+  const callsTakenWidth =
+    totals.dailyCallsBooked > 0
+      ? (totals.callsTaken / totals.dailyCallsBooked) * 100
       : 0
-  const totalHighTicketSalesCallsBookedWidth =
-    totals.dailyOutboundConversations > 0
-      ? (totals.totalHighTicketSalesCallsBooked /
-          totals.dailyOutboundConversations) *
-        100
+  const closesWidth =
+    totals.dailyCallsBooked > 0
+      ? (totals.closes / totals.dailyCallsBooked) * 100
       : 0
 
-  const avgDailyOutboundConversationsPerDay =
-    daysInRange > 0
-      ? Math.round(totals.dailyOutboundConversations / daysInRange)
-      : 0
-  const avgInboundConversationsPerDay =
-    daysInRange > 0 ? Math.round(totals.inboundConversations / daysInRange) : 0
-  const avgFollowUpsPerDay =
-    daysInRange > 0 ? Math.round(totals.followUps / daysInRange) : 0
-  const avgCallsProposedPerDay =
-    daysInRange > 0 ? Math.round(totals.callsProposed / daysInRange) : 0
-  const avgTotalHighTicketSalesCallsBookedPerDay =
-    daysInRange > 0
-      ? Math.round(totals.totalHighTicketSalesCallsBooked / daysInRange)
-      : 0
+  const avgDailyCallsBookedPerDay =
+    daysInRange > 0 ? Math.round(totals.dailyCallsBooked / daysInRange) : 0
+  const avgShowsPerDay =
+    daysInRange > 0 ? Math.round(totals.shows / daysInRange) : 0
+  const avgOffersMadePerDay =
+    daysInRange > 0 ? Math.round(totals.offersMade / daysInRange) : 0
+  const avgCallsTakenPerDay =
+    daysInRange > 0 ? Math.round(totals.callsTaken / daysInRange) : 0
+  const avgClosesPerDay =
+    daysInRange > 0 ? Math.round(totals.closes / daysInRange) : 0
 
-  const prevAvgDailyOutboundConversationsPerDay =
+  const prevAvgDailyCallsBookedPerDay =
     daysInPreviousRange > 0
-      ? previousTotals.dailyOutboundConversations / daysInPreviousRange
+      ? previousTotals.dailyCallsBooked / daysInPreviousRange
       : 0
-  const prevAvgInboundConversationsPerDay =
+  const prevAvgShowsPerDay =
+    daysInPreviousRange > 0 ? previousTotals.shows / daysInPreviousRange : 0
+  const prevAvgOffersMadePerDay =
     daysInPreviousRange > 0
-      ? previousTotals.inboundConversations / daysInPreviousRange
+      ? previousTotals.offersMade / daysInPreviousRange
       : 0
-  const prevAvgFollowUpsPerDay =
-    daysInPreviousRange > 0 ? previousTotals.followUps / daysInPreviousRange : 0
-  const prevAvgCallsProposedPerDay =
+  const prevAvgCallsTakenPerDay =
     daysInPreviousRange > 0
-      ? previousTotals.callsProposed / daysInPreviousRange
+      ? previousTotals.callsTaken / daysInPreviousRange
       : 0
-  const prevAvgTotalHighTicketSalesCallsBookedPerDay =
-    daysInPreviousRange > 0
-      ? previousTotals.totalHighTicketSalesCallsBooked / daysInPreviousRange
-      : 0
+  const prevAvgClosesPerDay =
+    daysInPreviousRange > 0 ? previousTotals.closes / daysInPreviousRange : 0
 
   const calcPercentageDiff = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0
     return Math.round(((current - previous) / previous) * 100)
   }
 
-  const dailyOutboundConversationsDiff = calcPercentageDiff(
-    avgDailyOutboundConversationsPerDay,
-    prevAvgDailyOutboundConversationsPerDay
+  const dailyCallsBookedDiff = calcPercentageDiff(
+    avgDailyCallsBookedPerDay,
+    prevAvgDailyCallsBookedPerDay
   )
-  const inboundConversationsDiff = calcPercentageDiff(
-    avgInboundConversationsPerDay,
-    prevAvgInboundConversationsPerDay
+  const showsDiff = calcPercentageDiff(avgShowsPerDay, prevAvgShowsPerDay)
+  const offersMadeDiff = calcPercentageDiff(
+    avgOffersMadePerDay,
+    prevAvgOffersMadePerDay
   )
-  const followUpsDiff = calcPercentageDiff(
-    avgFollowUpsPerDay,
-    prevAvgFollowUpsPerDay
+  const callsTakenDiff = calcPercentageDiff(
+    avgCallsTakenPerDay,
+    prevAvgCallsTakenPerDay
   )
-  const callsProposedDiff = calcPercentageDiff(
-    avgCallsProposedPerDay,
-    prevAvgCallsProposedPerDay
-  )
-  const totalHighTicketSalesCallsBookedDiff = calcPercentageDiff(
-    avgTotalHighTicketSalesCallsBookedPerDay,
-    prevAvgTotalHighTicketSalesCallsBookedPerDay
+  const closesDiff = calcPercentageDiff(avgClosesPerDay, prevAvgClosesPerDay)
+
+  const showRate =
+    totals.dailyCallsBooked > 0
+      ? ((totals.shows / totals.dailyCallsBooked) * 100).toFixed(1)
+      : "0.0"
+  const prevShowRate =
+    previousTotals.dailyCallsBooked > 0
+      ? (
+          (previousTotals.shows / previousTotals.dailyCallsBooked) *
+          100
+        ).toFixed(1)
+      : "0.0"
+  const showRateDiff = calcPercentageDiff(
+    parseFloat(showRate),
+    parseFloat(prevShowRate)
   )
 
-  const responseRate =
-    totals.dailyOutboundConversations > 0
-      ? (
-          (totals.inboundConversations / totals.dailyOutboundConversations) *
-          100
-        ).toFixed(1)
+  const offerRate =
+    totals.callsTaken > 0
+      ? ((totals.offersMade / totals.callsTaken) * 100).toFixed(1)
       : "0.0"
-  const prevResponseRate =
-    previousTotals.dailyOutboundConversations > 0
-      ? (
-          (previousTotals.inboundConversations /
-            previousTotals.dailyOutboundConversations) *
-          100
-        ).toFixed(1)
+  const prevOfferRate =
+    previousTotals.callsTaken > 0
+      ? ((previousTotals.offersMade / previousTotals.callsTaken) * 100).toFixed(
+          1
+        )
       : "0.0"
-  const responseRateDiff = calcPercentageDiff(
-    parseFloat(responseRate),
-    parseFloat(prevResponseRate)
-  )
-
-  const bookingRate =
-    totals.dailyOutboundConversations > 0
-      ? (
-          (totals.setsScheduled / totals.dailyOutboundConversations) *
-          100
-        ).toFixed(1)
-      : "0.0"
-  const prevBookingRate =
-    previousTotals.dailyOutboundConversations > 0
-      ? (
-          (previousTotals.setsScheduled /
-            previousTotals.dailyOutboundConversations) *
-          100
-        ).toFixed(1)
-      : "0.0"
-  const bookingRateDiff = calcPercentageDiff(
-    parseFloat(bookingRate),
-    parseFloat(prevBookingRate)
+  const offerRateDiff = calcPercentageDiff(
+    parseFloat(offerRate),
+    parseFloat(prevOfferRate)
   )
 
   const closeRate =
-    totals.setsTaken > 0
-      ? ((totals.closedSets / totals.setsTaken) * 100).toFixed(1)
+    totals.callsTaken > 0
+      ? ((totals.closes / totals.callsTaken) * 100).toFixed(1)
       : "0.0"
   const prevCloseRate =
-    previousTotals.setsTaken > 0
-      ? ((previousTotals.closedSets / previousTotals.setsTaken) * 100).toFixed(
-          1
-        )
+    previousTotals.callsTaken > 0
+      ? ((previousTotals.closes / previousTotals.callsTaken) * 100).toFixed(1)
       : "0.0"
   const closeRateDiff = calcPercentageDiff(
     parseFloat(closeRate),
@@ -523,11 +488,11 @@ export default function SettersAnalytics() {
 
   // Data for Pie Chart
   const pieChartData = [
-    { name: "Sets Taken", value: totals.setsTaken },
-    { name: "Closed Sets", value: totals.closedSets },
+    { name: "Shows", value: totals.shows },
+    { name: "Closes", value: totals.closes },
   ]
 
-  const COLORS = ["#4CAF50", "#2196F3"] // Green for Sets Taken, Blue for Closed Sets
+  const COLORS = ["#4CAF50", "#2196F3"] // Green for Shows, Blue for Closes
 
   // Custom label for pie chart center
   const renderCustomLabel = () => {
@@ -539,14 +504,14 @@ export default function SettersAnalytics() {
         dominantBaseline="middle"
         className="text-2xl font-bold"
       >
-        {totals.setsScheduled}
+        {totals.callsTaken}
       </text>
     )
   }
 
   return (
     <div className="container mx-auto max-w-full p-4">
-      <h1 className="mb-6 text-2xl font-bold">Setters Analytics</h1>
+      <h1 className="mb-6 text-2xl font-bold">Closers Analytics</h1>
 
       <div className="mb-6 flex items-center justify-between">
         <Tabs
@@ -628,14 +593,14 @@ export default function SettersAnalytics() {
           </TabsContent>
         </Tabs>
         <select
-          value={selectedSetterId}
-          onChange={(e) => handleSetterChange(e.target.value)}
+          value={selectedCloserId}
+          onChange={(e) => handleCloserChange(e.target.value)}
           className="h-8 w-[160px] rounded-md border bg-background p-1 text-sm"
         >
-          <option value="">All Setters</option>
-          {setters.map((setter) => (
-            <option key={setter.id} value={setter.id}>
-              {setter.name}
+          <option value="">All Closers</option>
+          {closers.map((closer) => (
+            <option key={closer.id} value={closer.id}>
+              {closer.name}
             </option>
           ))}
         </select>
@@ -646,25 +611,24 @@ export default function SettersAnalytics() {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Setter</TableHead>
-              <TableHead>Outbound Conv.</TableHead>
-              <TableHead>Inbound Conv.</TableHead>
-              <TableHead>Follow Ups</TableHead>
-              <TableHead>Calls Proposed</TableHead>
-              <TableHead>High Ticket Calls</TableHead>
-              <TableHead>Sets Scheduled</TableHead>
-              <TableHead>Sets Taken</TableHead>
-              <TableHead>Closed Sets</TableHead>
+              <TableHead>Closer</TableHead>
+              <TableHead>Calls Booked</TableHead>
+              <TableHead>Shows</TableHead>
+              <TableHead>No Shows</TableHead>
+              <TableHead>Cancelled</TableHead>
+              <TableHead>Disqualified</TableHead>
+              <TableHead>Rescheduled</TableHead>
+              <TableHead>Offers Made</TableHead>
+              <TableHead>Calls Taken</TableHead>
+              <TableHead>Closes</TableHead>
+              <TableHead>Cash Collected ($)</TableHead>
               <TableHead>Revenue ($)</TableHead>
-              <TableHead>New Cash ($)</TableHead>
-              <TableHead>Recurring Cash ($)</TableHead>
-              <TableHead>Downsell Rev. ($)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedMetrics.length ? (
               paginatedMetrics.map((metric) => (
-                <TableRow key={`${metric.setterId}-${metric.date}`}>
+                <TableRow key={`${metric.closerId}-${metric.date}`}>
                   <TableCell>
                     {formatInTimeZone(
                       parseISO(metric.date),
@@ -672,29 +636,24 @@ export default function SettersAnalytics() {
                       "PPP"
                     )}
                   </TableCell>
-                  <TableCell>{`${metric.setter.firstName} ${metric.setter.lastName}`}</TableCell>
-                  <TableCell>{metric.dailyOutboundConversations}</TableCell>
-                  <TableCell>{metric.inboundConversations}</TableCell>
-                  <TableCell>{metric.followUps}</TableCell>
-                  <TableCell>{metric.callsProposed}</TableCell>
-                  <TableCell>
-                    {metric.totalHighTicketSalesCallsBooked}
-                  </TableCell>
-                  <TableCell>{metric.setsScheduled}</TableCell>
-                  <TableCell>{metric.setsTaken}</TableCell>
-                  <TableCell>{metric.closedSets}</TableCell>
+                  <TableCell>{`${metric.closer.firstName} ${metric.closer.lastName}`}</TableCell>
+                  <TableCell>{metric.dailyCallsBooked}</TableCell>
+                  <TableCell>{metric.shows}</TableCell>
+                  <TableCell>{metric.noShows}</TableCell>
+                  <TableCell>{metric.cancelled}</TableCell>
+                  <TableCell>{metric.disqualified}</TableCell>
+                  <TableCell>{metric.rescheduled}</TableCell>
+                  <TableCell>{metric.offersMade}</TableCell>
+                  <TableCell>{metric.callsTaken}</TableCell>
+                  <TableCell>{metric.closes}</TableCell>
+                  <TableCell>{metric.cashCollected.toFixed(2)}</TableCell>
                   <TableCell>{metric.revenueGenerated.toFixed(2)}</TableCell>
-                  <TableCell>{metric.newCashCollected.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {metric.recurringCashCollected.toFixed(2)}
-                  </TableCell>
-                  <TableCell>{metric.downsellRevenue.toFixed(2)}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={14} className="text-center">
-                  No metrics found for the selected period or setter.
+                <TableCell colSpan={13} className="text-center">
+                  No metrics found for the selected period or closer.
                 </TableCell>
               </TableRow>
             )}
@@ -718,7 +677,7 @@ export default function SettersAnalytics() {
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   size="sm"
-                  onClickanylticspage={page}
+                  onClick={() => handlePageChange(page)}
                 >
                   {page}
                 </Button>
@@ -747,93 +706,89 @@ export default function SettersAnalytics() {
             <div>
               <div className="relative">
                 <p className="text-center text-2xl font-bold">
-                  {avgDailyOutboundConversationsPerDay}
+                  {avgDailyCallsBookedPerDay}
                 </p>
                 <p
                   className={`absolute left-1/2 top-1/2 -translate-y-2/3 translate-x-3.5 text-sm ${
-                    dailyOutboundConversationsDiff >= 0
+                    dailyCallsBookedDiff >= 0
                       ? "text-green-600"
                       : "text-red-600"
                   }`}
                 >
-                  {dailyOutboundConversationsDiff >= 0 ? "+" : ""}
-                  {dailyOutboundConversationsDiff}%
+                  {dailyCallsBookedDiff >= 0 ? "+" : ""}
+                  {dailyCallsBookedDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">Outbound Conv. per Day</p>
+              <p className="text-center text-sm">Calls Booked per Day</p>
             </div>
             <div>
               <div className="relative">
                 <p className="text-center text-2xl font-bold">
-                  {avgInboundConversationsPerDay}
+                  {avgShowsPerDay}
                 </p>
                 <p
                   className={`absolute left-1/2 top-1/2 -translate-y-2/3 translate-x-3.5 text-sm ${
-                    inboundConversationsDiff >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
+                    showsDiff >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {inboundConversationsDiff >= 0 ? "+" : ""}
-                  {inboundConversationsDiff}%
+                  {showsDiff >= 0 ? "+" : ""}
+                  {showsDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">Inbound Conv. per Day</p>
+              <p className="text-center text-sm">Shows per Day</p>
             </div>
             <div>
               <div className="relative">
                 <p className="text-center text-2xl font-bold">
-                  {avgFollowUpsPerDay}
+                  {avgOffersMadePerDay}
                 </p>
                 <p
                   className={`absolute left-1/2 top-1/2 -translate-y-2/3 translate-x-3.5 text-sm ${
-                    followUpsDiff >= 0 ? "text-green-600" : "text-red-600"
+                    offersMadeDiff >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {followUpsDiff >= 0 ? "+" : ""}
-                  {followUpsDiff}%
+                  {offersMadeDiff >= 0 ? "+" : ""}
+                  {offersMadeDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">Follow Ups per Day</p>
+              <p className="text-center text-sm">Offers Made per Day</p>
             </div>
             <div>
               <div className="relative">
                 <p className="text-center text-2xl font-bold">
-                  {avgCallsProposedPerDay}
+                  {avgCallsTakenPerDay}
                 </p>
                 <p
                   className={`absolute left-1/2 top-1/2 -translate-y-2/3 translate-x-3.5 text-sm ${
-                    callsProposedDiff >= 0 ? "text-green-600" : "text-red-600"
+                    callsTakenDiff >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {callsProposedDiff >= 0 ? "+" : ""}
-                  {callsProposedDiff}%
+                  {callsTakenDiff >= 0 ? "+" : ""}
+                  {callsTakenDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">Calls Proposed per Day</p>
+              <p className="text-center text-sm">Calls Taken per Day</p>
             </div>
             <div>
               <div className="relative">
                 <p className="text-center text-2xl font-bold">
-                  {avgTotalHighTicketSalesCallsBookedPerDay}
+                  {avgClosesPerDay}
                 </p>
                 <p
                   className={`absolute left-1/2 top-1/2 -translate-y-2/3 translate-x-3.5 text-sm ${
-                    totalHighTicketSalesCallsBookedDiff >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
+                    closesDiff >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {totalHighTicketSalesCallsBookedDiff >= 0 ? "+" : ""}
-                  {totalHighTicketSalesCallsBookedDiff}%
+                  {closesDiff >= 0 ? "+" : ""}
+                  {closesDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">High Ticket Calls per Day</p>
+              <p className="text-center text-sm">Closes per Day</p>
             </div>
           </div>
         </div>
 
-        {/* Call Metrics Tile */}
+        {/* Activity Metrics Tile */}
         <div className="rounded-lg border bg-background p-4 shadow-sm lg:col-span-2">
           <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
             Activity Metrics
@@ -842,54 +797,48 @@ export default function SettersAnalytics() {
             <div className="flex items-center">
               <div
                 className="flex h-14 min-w-[100px] flex-col items-center justify-center rounded bg-blue-400 text-gray-800"
-                style={{ width: `${dailyOutboundConversationsWidth}%` }}
+                style={{ width: `${dailyCallsBookedWidth}%` }}
               >
                 <span className="text-2xl font-bold">
-                  {totals.dailyOutboundConversations}
+                  {totals.dailyCallsBooked}
                 </span>
-                <span className="truncate text-sm">Outbound Conv.</span>
+                <span className="truncate text-sm">Calls Booked</span>
               </div>
             </div>
             <div className="flex items-center">
               <div
                 className="flex h-14 min-w-[100px] flex-col items-center justify-center rounded bg-blue-300 text-gray-800"
-                style={{ width: `${inboundConversationsWidth}%` }}
+                style={{ width: `${showsWidth}%` }}
               >
-                <span className="text-2xl font-bold">
-                  {totals.inboundConversations}
-                </span>
-                <span className="truncate text-sm">Inbound Conv.</span>
+                <span className="text-2xl font-bold">{totals.shows}</span>
+                <span className="truncate text-sm">Shows</span>
               </div>
             </div>
             <div className="flex items-center">
               <div
                 className="flex h-14 min-w-[100px] flex-col items-center justify-center rounded bg-blue-200 text-gray-800"
-                style={{ width: `${followUpsWidth}%` }}
+                style={{ width: `${offersMadeWidth}%` }}
               >
-                <span className="text-2xl font-bold">{totals.followUps}</span>
-                <span className="truncate text-sm">Follow Ups</span>
+                <span className="text-2xl font-bold">{totals.offersMade}</span>
+                <span className="truncate text-sm">Offers Made</span>
               </div>
             </div>
             <div className="flex items-center">
               <div
                 className="flex h-14 min-w-[100px] flex-col items-center justify-center rounded bg-blue-100 text-gray-800"
-                style={{ width: `${callsProposedWidth}%` }}
+                style={{ width: `${callsTakenWidth}%` }}
               >
-                <span className="text-2xl font-bold">
-                  {totals.callsProposed}
-                </span>
-                <span className="truncate text-sm">Calls Proposed</span>
+                <span className="text-2xl font-bold">{totals.callsTaken}</span>
+                <span className="truncate text-sm">Calls Taken</span>
               </div>
             </div>
             <div className="flex items-center">
               <div
                 className="flex h-14 min-w-[100px] flex-col items-center justify-center rounded bg-blue-50 text-gray-800"
-                style={{ width: `${totalHighTicketSalesCallsBookedWidth}%` }}
+                style={{ width: `${closesWidth}%` }}
               >
-                <span className="text-2xl font-bold">
-                  {totals.totalHighTicketSalesCallsBooked}
-                </span>
-                <span className="truncate text-sm">High Ticket Calls</span>
+                <span className="text-2xl font-bold">{totals.closes}</span>
+                <span className="truncate text-sm">Closes</span>
               </div>
             </div>
           </div>
@@ -903,33 +852,31 @@ export default function SettersAnalytics() {
           <div className="space-y-4">
             <div>
               <div className="relative">
-                <p className="text-center text-2xl font-bold">
-                  {responseRate}%
-                </p>
+                <p className="text-center text-2xl font-bold">{showRate}%</p>
                 <p
                   className={`absolute left-2/3 top-1/2 -translate-y-2/3 translate-x-2 text-sm ${
-                    responseRateDiff >= 0 ? "text-green-600" : "text-red-600"
+                    showRateDiff >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {responseRateDiff >= 0 ? "+" : ""}
-                  {responseRateDiff}%
+                  {showRateDiff >= 0 ? "+" : ""}
+                  {showRateDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">Response Rate</p>
+              <p className="text-center text-sm">Show Rate</p>
             </div>
             <div>
               <div className="relative">
-                <p className="text-center text-2xl font-bold">{bookingRate}%</p>
+                <p className="text-center text-2xl font-bold">{offerRate}%</p>
                 <p
                   className={`absolute left-2/3 top-1/2 -translate-y-2/3 translate-x-2 text-sm ${
-                    bookingRateDiff >= 0 ? "text-green-600" : "text-red-600"
+                    offerRateDiff >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {bookingRateDiff >= 0 ? "+" : ""}
-                  {bookingRateDiff}%
+                  {offerRateDiff >= 0 ? "+" : ""}
+                  {offerRateDiff}%
                 </p>
               </div>
-              <p className="text-center text-sm">Booking Rate</p>
+              <p className="text-center text-sm">Offer Rate</p>
             </div>
             <div>
               <div className="relative">
@@ -948,12 +895,12 @@ export default function SettersAnalytics() {
           </div>
         </div>
 
-        {/* Pie Chart Tile for Sets Taken and Closed Sets */}
+        {/* Pie Chart Tile for Shows and Closes */}
         <div className="rounded-lg border bg-background p-4 shadow-sm">
           <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
-            Sets Scheduled
+            Calls Taken
           </h3>
-          {totals.setsTaken + totals.closedSets > 0 ? (
+          {totals.shows + totals.closes > 0 ? (
             <ResponsiveContainer width="100%" height={140}>
               <PieChart>
                 <Pie
@@ -985,23 +932,18 @@ export default function SettersAnalytics() {
             </ResponsiveContainer>
           ) : (
             <p className="text-center text-sm text-muted-foreground">
-              No set data available
+              No call data available
             </p>
           )}
         </div>
 
         {/* Individual Metric Tiles */}
         {[
+          {
+            label: "Cash Collected ($)",
+            value: totals.cashCollected.toFixed(2),
+          },
           { label: "Revenue ($)", value: totals.revenueGenerated.toFixed(2) },
-          { label: "New Cash ($)", value: totals.newCashCollected.toFixed(2) },
-          {
-            label: "Recurring Cash ($)",
-            value: totals.recurringCashCollected.toFixed(2),
-          },
-          {
-            label: "Downsell Rev. ($)",
-            value: totals.downsellRevenue.toFixed(2),
-          },
         ].map((metric) => (
           <div
             key={metric.label}

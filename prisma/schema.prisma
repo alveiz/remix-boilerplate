@@ -125,7 +125,7 @@ model SetterMetrics {
 }
 
 model CloserMetrics {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
   closerId        String    @db.ObjectId
   closer          Closer    @relation("CloserToMetrics", fields: [closerId], references: [id])
   date            DateTime

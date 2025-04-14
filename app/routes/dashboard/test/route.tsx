@@ -267,6 +267,22 @@ export default function DialersAnalytics() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [startDate, setStartDate] = useState<Date | undefined>()
   const [endDate, setEndDate] = useState<Date | undefined>()
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Pagination settings
+  const rowsPerPage = 10
+  const totalRows = dialersMetrics.length
+  const totalPages = Math.ceil(totalRows / rowsPerPage)
+  const startIndex = (currentPage - 1) * rowsPerPage
+  const endIndex = startIndex + rowsPerPage
+  const paginatedMetrics = dialersMetrics.slice(startIndex, endIndex)
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
 
   // Get selected dialer from search params
   const selectedDialerId = searchParams.get("dialerId") || ""
@@ -299,6 +315,11 @@ export default function DialersAnalytics() {
       )
     }
   }, [userTimeZone, setSearchParams])
+
+  useEffect(() => {
+    // Reset to page 1 when dialersMetrics changes (e.g., new filter applied)
+    setCurrentPage(1)
+  }, [dialersMetrics])
 
   const handleRangeChange = (range: string) => {
     setSearchParams(
@@ -469,7 +490,7 @@ export default function DialersAnalytics() {
     return (
       <text
         x="50%"
-        y="36%"
+        y="38%"
         textAnchor="middle"
         dominantBaseline="middle"
         className="text-2xl font-bold"
@@ -576,54 +597,94 @@ export default function DialersAnalytics() {
         </select>
       </div>
 
-      <Table wrapperClassName="max-w-[1000px] overflow-x-auto min-w-[600px]">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Dialer</TableHead>
-            <TableHead>Dials</TableHead>
-            <TableHead>Connects</TableHead>
-            <TableHead>Conversations</TableHead>
-            <TableHead>Qualified Conv.</TableHead>
-            <TableHead>Meetings Scheduled</TableHead>
-            <TableHead>Meetings Set</TableHead>
-            <TableHead>Meetings Showed</TableHead>
-            <TableHead>No Shows</TableHead>
-            <TableHead>Closed Deals</TableHead>
-            <TableHead>Revenue ($)</TableHead>
-            <TableHead>Cash Collected ($)</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {dialersMetrics.length ? (
-            dialersMetrics.map((metric) => (
-              <TableRow key={`${metric.dialerId}-${metric.date}`}>
-                <TableCell>
-                  {formatInTimeZone(parseISO(metric.date), userTimeZone, "PPP")}
-                </TableCell>
-                <TableCell>{`${metric.dialer.firstName} ${metric.dialer.lastName}`}</TableCell>
-                <TableCell>{metric.dials}</TableCell>
-                <TableCell>{metric.connects}</TableCell>
-                <TableCell>{metric.conversations}</TableCell>
-                <TableCell>{metric.qualifiedConversations}</TableCell>
-                <TableCell>{metric.meetingsScheduled}</TableCell>
-                <TableCell>{metric.meetingsSet}</TableCell>
-                <TableCell>{metric.meetingsShowed}</TableCell>
-                <TableCell>{metric.noShows}</TableCell>
-                <TableCell>{metric.closedDeals}</TableCell>
-                <TableCell>{metric.revenueGenerated.toFixed(2)}</TableCell>
-                <TableCell>{metric.cashCollected.toFixed(2)}</TableCell>
-              </TableRow>
-            ))
-          ) : (
+      <div className="relative">
+        <Table wrapperClassName="max-w-[1000px] overflow-x-auto min-w-[600px]">
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={13} className="text-center">
-                No metrics found for the selected period or dialer.
-              </TableCell>
+              <TableHead>Date</TableHead>
+              <TableHead>Dialer</TableHead>
+              <TableHead>Dials</TableHead>
+              <TableHead>Connects</TableHead>
+              <TableHead>Conversations</TableHead>
+              <TableHead>Qualified Conv.</TableHead>
+              <TableHead>Meetings Scheduled</TableHead>
+              <TableHead>Meetings Set</TableHead>
+              <TableHead>Meetings Showed</TableHead>
+              <TableHead>No Shows</TableHead>
+              <TableHead>Closed Deals</TableHead>
+              <TableHead>Revenue ($)</TableHead>
+              <TableHead>Cash Collected ($)</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedMetrics.length ? (
+              paginatedMetrics.map((metric) => (
+                <TableRow key={`${metric.dialerId}-${metric.date}`}>
+                  <TableCell>
+                    {formatInTimeZone(
+                      parseISO(metric.date),
+                      userTimeZone,
+                      "PPP"
+                    )}
+                  </TableCell>
+                  <TableCell>{`${metric.dialer.firstName} ${metric.dialer.lastName}`}</TableCell>
+                  <TableCell>{metric.dials}</TableCell>
+                  <TableCell>{metric.connects}</TableCell>
+                  <TableCell>{metric.conversations}</TableCell>
+                  <TableCell>{metric.qualifiedConversations}</TableCell>
+                  <TableCell>{metric.meetingsScheduled}</TableCell>
+                  <TableCell>{metric.meetingsSet}</TableCell>
+                  <TableCell>{metric.meetingsShowed}</TableCell>
+                  <TableCell>{metric.noShows}</TableCell>
+                  <TableCell>{metric.closedDeals}</TableCell>
+                  <TableCell>{metric.revenueGenerated.toFixed(2)}</TableCell>
+                  <TableCell>{metric.cashCollected.toFixed(2)}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={13} className="text-center">
+                  No metrics found for the selected period or dialer.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+
+        {/* Pagination Controls */}
+        {totalRows > rowsPerPage && (
+          <div className="mt-4 flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+              (page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </Button>
+              )
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
 
       <h2 className="mb-4 mt-8 text-xl font-semibold">Metrics</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -835,7 +896,7 @@ export default function DialersAnalytics() {
             Meetings Scheduled
           </h3>
           {totals.meetingsShowed + totals.noShows > 0 ? (
-            <ResponsiveContainer width="100%" height={120}>
+            <ResponsiveContainer width="100%" height={140}>
               <PieChart>
                 <Pie
                   data={pieChartData}

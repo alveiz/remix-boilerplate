@@ -264,7 +264,7 @@ export default function Dialers() {
   return (
     <div className="container mx-auto max-w-4xl p-4">
       <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight">
-        Daily Metrics for {dialer.firstName} {dialer.lastName}
+        Dialer EOD Form
       </h2>
 
       <Form method="post" className="mt-10 space-y-6">
@@ -402,7 +402,7 @@ export default function Dialers() {
       </Dialog>
 
       {/* Inline CSS to style the calendar icon */}
-      <style jsx>{`
+      <style jsx="true">{`
         .date-input::-webkit-calendar-picker-indicator {
           filter: invert(0.9); /* Dark gray for light mode (~gray-700) */
         }
