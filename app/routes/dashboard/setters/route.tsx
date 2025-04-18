@@ -855,7 +855,7 @@ export default function SettersAnalytics() {
       </div>
 
       <div className="relative">
-        <Table wrapperClassName="max-w-[1000px] overflow-x-auto min-w-[600px]">
+        <Table wrapperClassName="max-w-[1080px] overflow-x-auto min-w-[600px]">
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
@@ -950,7 +950,7 @@ export default function SettersAnalytics() {
       </div>
 
       <h2 className="mb-4 mt-8 text-xl font-semibold">Metrics</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         {/* Daily Averages Tile */}
         <div className="rounded-lg border bg-background p-4 shadow-sm">
           <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
@@ -1029,7 +1029,7 @@ export default function SettersAnalytics() {
                   {avgHighTicketCallsBooked}
                 </p>
                 <p
-                  className={`absolute left-1/2 top-1/2 -translate-y-2/3 translate-x-3.5 text-sm ${
+                  className={`-translate-2/3 absolute left-1/2 top-1/2 translate-x-3.5 text-sm ${
                     highTicketCallsBookedDiff >= 0
                       ? "text-green-600"
                       : "text-red-600"
@@ -1106,60 +1106,91 @@ export default function SettersAnalytics() {
               </div>
             </div>
             <div className="flex flex-col gap-4">
-              <div>
-                <div className="relative">
-                  <p className="text-center text-2xl font-bold">
-                    {callProposalRate}%
-                  </p>
-                  <p
-                    className={`absolute left-2/3 top-1/2 -translate-y-2/3 translate-x-2 text-sm ${
-                      callProposalRateDiff >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {callProposalRateDiff >= 0 ? "+" : ""}
-                    {callProposalRateDiff}%
-                  </p>
+              <div className="flex items-start justify-center">
+                <div className="flex min-w-[88px] flex-col items-center">
+                  <p className="text-2xl font-bold">{callProposalRate}%</p>
+                  <p className="text-center text-sm">Call Proposal Rate</p>
                 </div>
-                <p className="text-center text-sm">Call Proposal Rate</p>
+                <p
+                  className={`text-sm ${
+                    callProposalRateDiff >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {callProposalRateDiff >= 0 ? "+" : ""}
+                  {callProposalRateDiff}%
+                </p>
               </div>
-              <div>
-                <div className="relative">
-                  <p className="text-center text-2xl font-bold">
+              <div className="flex items-start justify-center">
+                <div className="flex min-w-[88px] flex-col items-center">
+                  <p className="text-2xl font-bold">
                     {highTicketCallBookRate}%
                   </p>
-                  <p
-                    className={`absolute left-2/3 top-1/2 -translate-y-2/3 translate-x-2 text-sm ${
-                      highTicketCallBookRateDiff >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {highTicketCallBookRateDiff >= 0 ? "+" : ""}
-                    {highTicketCallBookRateDiff}%
-                  </p>
+                  <p className="text-center text-sm">High-Ticket Book Rate</p>
                 </div>
-                <p className="text-center text-sm">
-                  High-Ticket Call Book;gt Rate
+                <p
+                  className={`text-sm ${
+                    highTicketCallBookRateDiff >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {highTicketCallBookRateDiff >= 0 ? "+" : ""}
+                  {highTicketCallBookRateDiff}%
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sales Metrics Tile */}
-        <div className="rounded-lg border bg-background p-4 shadow-sm lg:col-span-2">
-          <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
-            Sales Metrics
+        {/* Revenue Tile */}
+        <div className="flex h-full flex-col items-center justify-center rounded-lg border bg-background p-4 shadow-sm">
+          <p className="text-center text-2xl font-bold">
+            {totals.revenueGenerated.toFixed(2)}
+          </p>
+          <h3 className="text-center text-sm font-medium text-muted-foreground">
+            Revenue ($)
           </h3>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        </div>
+
+        {/* Revenue Breakdown Pie Chart Tile */}
+        <div className="flex flex-col rounded-lg border bg-background p-4 shadow-sm">
+          <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
+            Revenue Sources
+          </h3>
+          {totals.newCashCollected +
+            totals.recurringCashCollected +
+            totals.downsellRevenue ===
+          0 ? (
+            <p className="flex flex-1 items-center justify-center text-center text-sm text-muted-foreground">
+              No revenue data
+            </p>
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <div className="h-48 w-full max-w-xs">
+                <Pie
+                  key={`pie-${chartKey}`}
+                  data={revenueBreakdownData}
+                  options={pieChartOptions}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sales Metrics Tile */}
+        <div className="rounded-lg border bg-background p-4 shadow-sm lg:col-span-3">
+          <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
+            Sets Metrics
+          </h3>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
             {salesMaxValue === 0 ? (
-              <div className="text-center text-sm text-muted-foreground lg:col-span-2">
+              <div className="text-center text-sm text-muted-foreground lg:col-span-3">
                 No sales data available
               </div>
             ) : (
-              <div className="space-y-4 lg:col-span-2">
+              <div className="space-y-4 lg:col-span-3">
                 <div className="flex items-center">
                   <div
                     className="flex h-14 min-w-[100px] max-w-full flex-col items-center justify-center overflow-visible rounded bg-green-400 text-gray-800"
@@ -1196,73 +1227,40 @@ export default function SettersAnalytics() {
               </div>
             )}
             <div className="flex flex-col gap-4">
-              <div>
-                <div className="relative">
-                  <p className="text-center text-2xl font-bold">{showRate}%</p>
-                  <p
-                    className={`absolute left-2/3 top-1/2 -translate-y-2/3 translate-x-2 text-sm ${
-                      showRateDiff >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {showRateDiff >= 0 ? "+" : ""}
-                    {showRateDiff}%
-                  </p>
+              <div className="flex items-start justify-center">
+                <div className="flex min-w-[88px] flex-col items-center">
+                  <p className="text-2xl font-bold">{showRate}%</p>
+                  <p className="text-center text-sm">Show Rate</p>
                 </div>
-                <p className="text-center text-sm">Show Rate</p>
+                <p
+                  className={`text-sm ${
+                    showRateDiff >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {showRateDiff >= 0 ? "+" : ""}
+                  {showRateDiff}%
+                </p>
               </div>
-              <div>
-                <div className="relative">
-                  <p className="text-center text-2xl font-bold">{closeRate}%</p>
-                  <p
-                    className={`absolute left-2/3 top-1/2 -translate-y-2/3 translate-x-2 text-sm ${
-                      closeRateDiff >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {closeRateDiff >= 0 ? "+" : ""}
-                    {closeRateDiff}%
-                  </p>
+              <div className="flex items-start justify-center">
+                <div className="flex min-w-[88px] flex-col items-center">
+                  <p className="text-2xl font-bold">{closeRate}%</p>
+                  <p className="text-center text-sm">Close Rate</p>
                 </div>
-                <p className="text-center text-sm">Close Rate</p>
+                <p
+                  className={`text-sm ${
+                    closeRateDiff >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {closeRateDiff >= 0 ? "+" : ""}
+                  {closeRateDiff}%
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Revenue Tile */}
-        <div className="flex h-full flex-col items-center justify-center rounded-lg border bg-background p-4 shadow-sm">
-          <p className="text-center text-2xl font-bold">
-            {totals.revenueGenerated.toFixed(2)}
-          </p>
-          <h3 className="text-center text-sm font-medium text-muted-foreground">
-            Revenue ($)
-          </h3>
-        </div>
-
-        {/* Revenue Breakdown Pie Chart Tile */}
-        <div className="rounded-lg border bg-background p-4 shadow-sm">
-          <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
-            Revenue Breakdown
-          </h3>
-          {totals.newCashCollected +
-            totals.recurringCashCollected +
-            totals.downsellRevenue ===
-          0 ? (
-            <p className="text-center text-sm text-muted-foreground">
-              No revenue data
-            </p>
-          ) : (
-            <div className="h-48">
-              <Pie
-                key={`pie-${chartKey}`}
-                data={revenueBreakdownData}
-                options={pieChartOptions}
-              />
-            </div>
-          )}
-        </div>
-
         {/* Revenue Over Time Tile */}
-        <div className="rounded-lg border bg-background p-4 shadow-sm lg:col-span-4">
+        <div className="rounded-lg border bg-background p-4 shadow-sm lg:col-span-3">
           <h3 className="mb-2 text-center text-sm font-medium text-muted-foreground">
             Revenue Over Time
           </h3>
